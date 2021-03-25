@@ -100,6 +100,7 @@ extern int amiga_getch (unsigned char *ch);
 #ifdef AUDIODRV_AHI
 #include <devices/ahi.h>
 #ifdef __amigaos4__
+#include <dos/obsolete.h>
 #define SHAREDMEMFLAG MEMF_SHARED
 #else
 #define SHAREDMEMFLAG MEMF_PUBLIC
@@ -1997,7 +1998,7 @@ int main(int argc, char **argv) {
                         WildMidi_ClearError();
                     } else {
                         char *real_file = FIND_LAST_DIRSEP(argv[optind-1]);
-                        if (!real_file) real_file = argv[optind];
+                        if (!real_file) real_file = argv[optind-1];
                         else real_file++;
                         mk_midifile_name(real_file);
                         printf("\rWriting %s: %u bytes.\r\n", midi_file, getmidisize);

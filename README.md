@@ -1,5 +1,5 @@
 WildMIDI is a simple software midi player which has a core softsynth
-library that can be use with other applications.
+library that can be used in other applications.
 
 The WildMIDI library uses Gravis Ultrasound patch files to convert MIDI
 files into audio which is then passed back to the calling application.
@@ -37,7 +37,16 @@ Requirements:
 CHANGELOG
 
 0.4.4
-* [no changes yet]
+* Fixed integer overflow in midi parser sample count calculation
+ (bug #200).
+* Fixed 8 bit ping pong GUS patch loaders (bug #207).
+* Fixed wrong variable use in reverb code (bug #210).
+* Reset block status of tty after playback (bug #211).
+* Fixed broken file name handling for 'save as midi' command during
+  playback.
+* Clamp MUS volume commands (PR #226).
+* CMake project improvements (bugs: #214, #216, #217, #218) - cmake
+  version 3.1 or newer is now required.
 
 0.4.3
 * New API addition: WildMidi_InitVIO().  It is like WildMidi_Init(),

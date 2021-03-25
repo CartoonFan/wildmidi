@@ -62,70 +62,86 @@ SET(EXECUTABLE_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
 SET(LIBRARY_OUTPUT_PATH "${PROJECT_BINARY_DIR}")
 
 # set our library names
-IF (WIN32 AND NOT CMAKE_COMPILER_IS_MINGW) # windows uses *.lib for both static and dynamic, workaround
-    SET(LIBRARY_DYN_NAME "wildmidi_dynamic")
-    SET(LIBRARY_STATIC_NAME "wildmidi_static")
+IF (MSVC) # windows uses *.lib for both static and dynamic, workaround
+    SET(LIBRARY_DYN_NAME "libWildMidi")
+    SET(LIBRARY_STATIC_NAME "libWildMidi-static")
 ELSE () # everyone else uses .a and .so
     SET(LIBRARY_DYN_NAME "WildMidi")
     SET(LIBRARY_STATIC_NAME "WildMidi")
 ENDIF ()
 
-# do we want a static library?
-IF (WANT_STATIC)
-    ADD_LIBRARY(libwildmidi_static STATIC
-            ${wildmidi_library_SRCS}
-            ${wildmidi_library_HDRS}
-            )
+ADD_LIBRARY(libwildmidi-static STATIC
+        ${wildmidi_library_SRCS}
+        ${wildmidi_library_HDRS}
+        )
 
-    SET_TARGET_PROPERTIES(libwildmidi_static PROPERTIES
-            OUTPUT_NAME ${LIBRARY_STATIC_NAME} CLEAN_DIRECT_OUTPUT 1
-            COMPILE_DEFINITIONS WILDMIDI_BUILD
+SET_TARGET_PROPERTIES(libwildmidi-static PROPERTIES
+        OUTPUT_NAME ${LIBRARY_STATIC_NAME} CLEAN_DIRECT_OUTPUT 1
+        COMPILE_DEFINITIONS WILDMIDI_BUILD
+        )
+
+TARGET_COMPILE_DEFINITIONS(libwildmidi-static INTERFACE
+        WILDMIDI_STATIC
+        )
+
+TARGET_INCLUDE_DIRECTORIES(libwildmidi-static INTERFACE
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        )
+
+# If the static library was not requested, we do not add it to the "all" & "install" targets
+IF (WANT_STATIC)
+    LIST(APPEND wildmidi_lib_install libwildmidi-static)
+ELSE ()
+    SET_TARGET_PROPERTIES(libwildmidi-static PROPERTIES
+            EXCLUDE_FROM_ALL ON
             )
 ENDIF (WANT_STATIC)
 
 IF (BUILD_SHARED_LIBS)
     # dynamic library
-    ADD_LIBRARY(libwildmidi_dynamic SHARED
+    ADD_LIBRARY(libwildmidi SHARED
             ${wildmidi_library_SRCS}
             ${wildmidi_library_HDRS}
             )
 
-    TARGET_LINK_LIBRARIES(libwildmidi_dynamic
+    TARGET_LINK_LIBRARIES(libwildmidi
             ${EXTRA_LDFLAGS}
             ${M_LIBRARY}
             )
 
-    SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+    SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
             SOVERSION ${SOVERSION}
             VERSION ${VERSION}
             OUTPUT_NAME ${LIBRARY_DYN_NAME} CLEAN_DIRECT_OUTPUT 1
             )
 
     IF (WIN32)
-        SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+        SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
                 DEFINE_SYMBOL DLL_EXPORT
                 COMPILE_DEFINITIONS WILDMIDI_BUILD
                 )
     ELSEIF (HAVE_VISIBILITY_HIDDEN AND HAVE_VISIBILITY_DEFAULT) # GCC, Clang
-        SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+        SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
                 COMPILE_DEFINITIONS "WILDMIDI_BUILD;SYM_VISIBILITY"
                 COMPILE_FLAGS "-fvisibility=hidden"
                 )
     #ELSEIF (HAVE_LDSCOPE_HIDDEN AND HAVE_VISIBILITY_DEFAULT) # SunPro (__SUNPRO_C >= 0x590)
-    #   SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+    #   SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
     #           COMPILE_DEFINITIONS "WILDMIDI_BUILD;SYM_VISIBILITY"
     #           COMPILE_FLAGS "-xldscope=hidden"
     #           )
     ELSEIF (HAVE_LDSCOPE_HIDDEN AND HAVE_LDSCOPE_GLOBAL) # SunPro (__SUNPRO_C >= 0x550)
-        SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+        SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
                 COMPILE_DEFINITIONS "WILDMIDI_BUILD;SYM_LDSCOPE"
                 COMPILE_FLAGS "-xldscope=hidden"
                 )
     ELSE ()
-        SET_TARGET_PROPERTIES(libwildmidi_dynamic PROPERTIES
+        SET_TARGET_PROPERTIES(libwildmidi PROPERTIES
                 COMPILE_DEFINITIONS WILDMIDI_BUILD
                 )
     ENDIF ()
+    LIST(APPEND wildmidi_lib_install libwildmidi)
 ENDIF (BUILD_SHARED_LIBS)
 
 # do we want the wildmidi player?
@@ -149,13 +165,14 @@ IF (WANT_PLAYER AND BUILD_SHARED_LIBS)
 
     TARGET_LINK_LIBRARIES(wildmidi
             ${EXTRA_LDFLAGS}
-            libwildmidi_dynamic
+            libwildmidi
             ${AUDIO_LIBRARY}
             ${M_LIBRARY}
             )
     IF (WIN32)
         TARGET_LINK_LIBRARIES(wildmidi winmm)
     ENDIF ()
+    LIST(APPEND wildmidi_install wildmidi)
 ENDIF ()
 
 IF (WANT_PLAYERSTATIC)
@@ -182,13 +199,14 @@ IF (WANT_PLAYERSTATIC)
 
     TARGET_LINK_LIBRARIES(wildmidi-static
             ${EXTRA_LDFLAGS}
-            libwildmidi_static
+            libwildmidi-static
             ${AUDIO_LIBRARY}
             ${M_LIBRARY}
             )
     IF (WIN32)
         TARGET_LINK_LIBRARIES(wildmidi-static winmm)
     ENDIF ()
+    LIST(APPEND wildmidi_install wildmidi-static)
 ENDIF (WANT_PLAYERSTATIC)
 
 IF (WANT_DEVTEST)
@@ -201,27 +219,21 @@ IF (WANT_DEVTEST)
     ADD_EXECUTABLE(wildmidi-devtest
             ${wildmidi-devtest_executable_SRCS}
             )
+    LIST(APPEND wildmidi_install wildmidi-devtest)
 ENDIF (WANT_DEVTEST)
 
 # prepare pkg-config file
 CONFIGURE_FILE("wildmidi.pc.in" "${PROJECT_BINARY_DIR}/wildmidi.pc" @ONLY)
 
-IF (WANT_STATIC)
-    INSTALL(TARGETS libwildmidi_static EXPORT WildMidi-export LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    IF (WANT_PLAYER_STATIC)
-        INSTALL(TARGETS wildmidi-static BIN DESTINATION ${CMAKE_INSTALL_BINDIR})
-    ENDIF ()
-ENDIF (WANT_STATIC)
-
-IF (BUILD_SHARED_LIBS)
-    INSTALL(TARGETS libwildmidi_dynamic EXPORT WildMidi-export LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-    IF (WANT_PLAYER)
-        INSTALL(TARGETS wildmidi RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-    ENDIF ()
-ENDIF (BUILD_SHARED_LIBS)
-IF (WANT_DEVTEST)
-    INSTALL(TARGETS wildmidi-devtest DESTINATION ${CMAKE_INSTALL_BINDIR})
-ENDIF (WANT_DEVTEST)
+INSTALL(TARGETS ${wildmidi_lib_install}
+    EXPORT WildMidi-export
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+INSTALL(TARGETS ${wildmidi_install}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
 INSTALL(FILES ${PROJECT_BINARY_DIR}/wildmidi.pc DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 INSTALL(FILES ${PROJECT_SOURCE_DIR}/include/wildmidi_lib.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
