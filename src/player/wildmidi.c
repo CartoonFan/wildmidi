@@ -240,30 +240,30 @@ static int write_midi_output(void *output_data, size_t output_size) {
 }
 
 static struct option const long_options[] = {
-    { "version", 0, 0, 'v' },
-    { "help", 0, 0, 'h' },
-    { "playback", 1, 0, 'P'},
-    { "rate", 1, 0, 'r' },
-    { "mastervol", 1, 0, 'm' },
-    { "config", 1, 0, 'c' },
-#if defined(AUDIODRV_OSS) || defined(AUDIODRV_NETBSD) || defined(AUDIODRV_ALSA)
-    { "device", 1, 0, 'd' },
+    { "version", 0, NULL, 'v' },
+    { "help", 0, NULL, 'h' },
+    { "playback", 1, NULL, 'P'},
+    { "rate", 1, NULL, 'r' },
+    { "mastervol", 1, NULL, 'm' },
+    { "config", 1, NULL, 'c' },
+#if defined(AUDIODRV_OSS)||defined(AUDIODRV_NETBSD)||defined(AUDIODRV_ALSA)
+    { "device", 1, NULL, 'd' },
 #endif
-    { "wavout", 1, 0, 'o' },
-    { "tomidi", 1, 0, 'x' },
-    { "convert", 1, 0, 'g' },
-    { "frequency", 1, 0, 'f' },
-    { "log_vol", 0, 0, 'l' },
-    { "reverb", 0, 0, 'b' },
-    { "test_midi", 0, 0, 't' },
-    { "test_bank", 1, 0, 'k' },
-    { "test_patch", 1, 0, 'p' },
-    { "enhanced", 0, 0, 'e' },
-    { "roundtempo", 0, 0, 'n' },
-    { "skipsilentstart", 0, 0, 's' },
-    { "textaslyric", 0, 0, 'a' },
-    { "playfrom", 1, 0, 'i'},
-    { "playto", 1, 0, 'j'},
+    { "wavout", 1, NULL, 'o' },
+    { "tomidi", 1, NULL, 'x' },
+    { "convert", 1, NULL, 'g' },
+    { "frequency", 1, NULL, 'f' },
+    { "log_vol", 0, NULL, 'l' },
+    { "reverb", 0, NULL, 'b' },
+    { "test_midi", 0, NULL, 't' },
+    { "test_bank", 1, NULL, 'k' },
+    { "test_patch", 1, NULL, 'p' },
+    { "enhanced", 0, NULL, 'e' },
+    { "roundtempo", 0, NULL, 'n' },
+    { "skipsilentstart", 0, NULL, 's' },
+    { "textaslyric", 0, NULL, 'a' },
+    { "playfrom", 1, NULL, 'i'},
+    { "playto", 1, NULL, 'j'},
     { NULL, 0, NULL, 0 }
 };
 

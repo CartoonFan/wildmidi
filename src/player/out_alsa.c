@@ -75,7 +75,7 @@ static int open_alsa_output(const char *pcmname, unsigned int *rate) {
         goto fail;
     }
 
-    if (snd_pcm_hw_params_set_rate_near(pcm, hw, rate, 0) < 0) {
+    if (snd_pcm_hw_params_set_rate_near(pcm, hw, rate, NULL) < 0) {
         fprintf(stderr, "ALSA does not support %uHz for your soundcard\r\n", r);
         goto fail;
     }
@@ -90,12 +90,12 @@ static int open_alsa_output(const char *pcmname, unsigned int *rate) {
     alsa_buffer_time = 500000;
     alsa_period_time = 50000;
 
-    if ((err = snd_pcm_hw_params_set_buffer_time_near(pcm, hw, &alsa_buffer_time, 0)) < 0) {
+    if ((err = snd_pcm_hw_params_set_buffer_time_near(pcm, hw, &alsa_buffer_time, NULL)) < 0) {
         fprintf(stderr, "Set buffer time failed: %s.\r\n", snd_strerror(err));
         goto fail;
     }
 
-    if ((err = snd_pcm_hw_params_set_period_time_near(pcm, hw, &alsa_period_time, 0)) < 0) {
+    if ((err = snd_pcm_hw_params_set_period_time_near(pcm, hw, &alsa_period_time, NULL)) < 0) {
         fprintf(stderr, "Set period time failed: %s.\r\n", snd_strerror(err));
         goto fail;
     }
@@ -167,4 +167,4 @@ audiodrv_info audiodrv_alsa = {
     resume_alsa_output
 };
 
-#endif
+#endif /* AUDIODRV_ALSA */

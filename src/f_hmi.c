@@ -422,5 +422,5 @@ _hmi_end:
 
     if (hmi_mdi->reverb) return (hmi_mdi);
     _WM_freeMDI(hmi_mdi);
-    return 0;
+    return NULL;
 }
